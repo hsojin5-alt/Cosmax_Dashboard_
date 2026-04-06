@@ -103,8 +103,8 @@ st.markdown("""
 
 # ── 데이터 로드 ──────────────────────────────────────────────
 @st.cache_data
-def load_data():
-    xls = pd.ExcelFile("AI 실습.xlsx")
+def load_data(file_bytes):
+    xls = pd.ExcelFile(file_bytes)
 
     raw = pd.read_excel(xls, sheet_name="원료베이스", header=None)
     raw.columns = ["구분", "효능", "원료명", "주요성분", "원료함량"]
@@ -139,9 +139,6 @@ def load_data():
         emu[c] = emu[c].apply(lambda v: v / 100 if pd.notna(v) and v > 14 else v)
 
     return raw, sol, emu
-
-
-raw, sol, emu = load_data()
 
 # ── 공통 설정 ────────────────────────────────────────────────
 효능순서 = ["미백", "보습", "탄력", "진정", "모공", "기능성"]
@@ -186,6 +183,14 @@ with st.sidebar:
     st.markdown("## ⚙ 필터 설정")
     st.markdown("---")
 
+    st.markdown("**파일 업로드**")
+    uploaded_file = st.file_uploader(
+        "엑셀 파일 업로드", type=["xlsx", "xls"],
+        label_visibility="collapsed",
+    )
+
+    st.markdown("---")
+
     st.markdown("**구분**")
     sel_구분 = st.multiselect(
         "구분 선택", ["가용화", "유화"], default=["가용화", "유화"],
@@ -205,6 +210,13 @@ st.markdown("""
     <p class="header-sub">원료 베이스 · 가용화 안정도 · 유화 안정도 데이터를 한눈에 확인하세요.</p>
 </div>
 """, unsafe_allow_html=True)
+
+# ── 파일 업로드 체크 ─────────────────────────────────────────
+if uploaded_file is None:
+    st.info("👈 왼쪽 사이드바에서 엑셀 파일(.xlsx)을 업로드해주세요.")
+    st.stop()
+
+raw, sol, emu = load_data(uploaded_file)
 
 # ── KPI 카드 ─────────────────────────────────────────────────
 raw_가 = raw[raw["구분"] == "가용화"]
